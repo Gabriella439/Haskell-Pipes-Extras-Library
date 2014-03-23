@@ -1,0 +1,25 @@
+Name: pipes-extras
+Version: 1.0.0
+Cabal-Version: >=1.8.0.2
+Build-Type: Simple
+License: BSD3
+License-File: LICENSE
+Copyright: 2014 Gabriel Gonzalez
+Author: Gabriel Gonzalez
+Maintainer: Gabriel439@gmail.com
+Bug-Reports: https://github.com/Gabriel439/Haskell-Pipes-Extras-Library/issues
+Synopsis: Extra utilities for pipes
+Description: This package holds miscellaneous utilities related to the @pipes@
+    library.
+Category: Control, Pipes
+Source-Repository head
+    Type: git
+    Location: https://github.com/Gabriel439/Haskell-Pipes-Extras-Library
+
+Library
+    HS-Source-Dirs: src
+    Build-Depends:
+        base         >= 4       && < 5  ,
+        pipes        >= 4.0     && < 4.2
+    Exposed-Modules: Pipes.Extras
+    GHC-Options: -O2 -Wall
