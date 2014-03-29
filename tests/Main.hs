@@ -1,12 +1,12 @@
 module Main (main) where
 
-import Data.Functor.Identity
+import Data.Functor.Identity (Identity)
 import Test.Framework (defaultMain, testGroup, Test)
 import Test.Framework.Providers.HUnit
 import Test.HUnit hiding (Test)
-import Pipes
-import Pipes.Prelude as P
-import Pipes.Extras
+import Pipes (Pipe, (>->), each)
+import Pipes.Prelude (toList)
+import Pipes.Extras (scan1i)
 
 main :: IO ()
 main = defaultMain tests

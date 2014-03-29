@@ -1,6 +1,6 @@
 Name: pipes-extras
 Version: 1.0.0
-Cabal-Version: >=1.8.0.2
+Cabal-Version: >=1.10
 Build-Type: Simple
 License: BSD3
 License-File: LICENSE
@@ -23,13 +23,14 @@ Library
         pipes        >= 4.0     && < 4.2
     Exposed-Modules: Pipes.Extras
     GHC-Options: -O2 -Wall
+    Default-Language: Haskell2010
 
 test-suite tests
-    Default-Language: Haskell2010
     Type:             exitcode-stdio-1.0
     HS-Source-Dirs:   tests
     Main-Is:          Main.hs
     GHC-Options:      -Wall -rtsopts -fno-warn-missing-signatures -fno-enable-rewrite-rules
+    Default-Language: Haskell2010
 
     Build-Depends:
         base                       >= 4       && < 5   ,
