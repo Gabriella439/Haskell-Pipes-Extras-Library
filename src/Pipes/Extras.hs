@@ -9,6 +9,10 @@ module Pipes.Extras (
     , right
     , (+++)
 
+    -- * Lenses
+    , input
+    , output
+
     -- * Foldl Compatibility
     -- $foldl
     , fold
@@ -24,8 +28,10 @@ module Pipes.Extras (
     , scan1iM
     ) where
 
+import Data.Functor.Identity (Identity(Identity, runIdentity))
 import Control.Foldl (purely, impurely, Fold, FoldM)
 import Pipes
+import Pipes.Core (request, respond, (>\\), (//>))
 import qualified Pipes.Prelude as Pipes
 
 -- | Like 'Control.Arrow.arr' from 'Control.Arrow.Arrow'
@@ -70,6 +76,32 @@ right p = await' >~ for p yield'
     => Pipe a b m r -> Pipe c d m r -> Pipe (Either a c) (Either b d) m r
 pL +++ pR = left pL >-> right pR
 {-# INLINABLE (+++) #-}
+
+type Setter s t a b = (a -> Identity b) -> (s -> Identity t)
+
+{-| It helps to think in terms of the following simpler type:
+
+> input :: Monad m => Setter' (Consumer a m r) a
+
+    Note: This only works with @lens@ and not @lens-family-core@
+-}
+input :: Monad m => Setter (Proxy x' b y' y m r) (Proxy x' a y' y m r) a b
+input k p = Identity (request' >\\ p)
+  where
+    request' a' = fmap (\a -> runIdentity (k a)) (request a')
+{-# INLINABLE input #-}
+
+{-| It helps to think in terms of the following simpler type:
+
+> output :: Monad m => Setter' (Producer a m r) a
+
+    Note: This only works with @lens@ and not @lens-family-core@
+-}
+output :: Monad m => Setter (Proxy x' x y' a m r) (Proxy x' x y' b m r) a b
+output k p = Identity (p //> respond')
+  where
+    respond' a = respond (runIdentity (k a))
+{-# INLINABLE output #-}
 
 {- $foldl
     Note that you can already mix the @pipes@ and @foldl@ libraries without
