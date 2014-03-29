@@ -79,9 +79,10 @@ pL +++ pR = left pL >-> right pR
 
 type Setter s t a b = (a -> Identity b) -> (s -> Identity t)
 
-{-| It helps to think in terms of the following simpler type:
+{-| It helps to think in terms of the following simpler types:
 
-> input :: Monad m => Setter' (Consumer a m r) a
+> input :: Monad m => Setter' (Consumer a   m r) a
+> input :: Monad m => Setter' (Pipe     a b m r) a
 
     Note: This only works with @lens@ and not @lens-family-core@
 -}
@@ -91,9 +92,10 @@ input k p = Identity (request' >\\ p)
     request' a' = fmap (\a -> runIdentity (k a)) (request a')
 {-# INLINABLE input #-}
 
-{-| It helps to think in terms of the following simpler type:
+{-| It helps to think in terms of the following simpler types:
 
-> output :: Monad m => Setter' (Producer a m r) a
+> output :: Monad m => Setter' (Producer b m r) b
+> output :: Monad m => Setter' (Pipe   a b m r) b
 
     Note: This only works with @lens@ and not @lens-family-core@
 -}
