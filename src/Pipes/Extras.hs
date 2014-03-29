@@ -13,6 +13,11 @@ module Pipes.Extras (
     , input
     , output
 
+    -- * Fun
+    , check
+    , delay
+    , progress
+
     -- * Foldl Compatibility
     -- $foldl
     , fold
@@ -28,6 +33,8 @@ module Pipes.Extras (
     , scan1iM
     ) where
 
+import Control.Concurrent (threadDelay)
+import Data.Char (toLower)
 import Data.Functor.Identity (Identity(Identity, runIdentity))
 import Control.Foldl (purely, impurely, Fold, FoldM)
 import Pipes
@@ -104,6 +111,68 @@ output k p = Identity (p //> respond')
   where
     respond' a = respond (runIdentity (k a))
 {-# INLINABLE output #-}
+
+{-| Ask whether or not to let values pass through
+
+>>> runEffect $ each [1..3] >-> check >-> Pipes.print
+Allow <1> [Y/n]?
+y<Enter>
+1
+Allow <2> [Y/n]?
+no<Enter>
+Allow <3> [Y/n]?
+YES<Enter>
+3
+
+-}
+check :: Show a => Pipe a a IO r
+check = Pipes.filterM $ \a -> do
+    let prompt = do
+            putStrLn ("Allow <"  ++ show a ++ "> [Y/n]?")
+            str <- getLine
+            case map toLower str of
+                ""    -> return True
+                "y"   -> return True
+                "yes" -> return True
+                "n"   -> return False
+                "no"  -> return False
+                _     -> do
+                    putStrLn "Please enter (y)es or (n)o."
+                    prompt
+    prompt
+{-# INLINABLE check #-}
+
+{-| Display a progress bar
+
+    This is very simple and only works if nothing else writes to the terminal
+
+    Try this:
+
+>>> runEffect $ each [1..] >-> progress >-> delay 0.1 >-> Pipes.Prelude.drain
+-}
+progress :: Pipe a a IO r
+progress = go (0 :: Integer)
+  where
+    go n = do
+        let str = bar n ++ " " ++ show n
+        lift $ putStr str
+        a <- await
+        yield a
+        lift $ putStr (replicate (length str) '\b')
+        go (n + 1)
+    bar n = case n `mod` 4 of
+        0 -> "|"
+        1 -> "/"
+        2 -> "-"
+        _ -> "\\"
+{-# INLINABLE progress #-}
+
+-- | Add a delay (in seconds) between each element
+delay :: Double -> Pipe a a IO r
+delay seconds = for cat $ \a -> do
+    yield a
+    lift $ threadDelay (truncate (seconds * 1000000))
+{-# INLINABLE delay #-}
 
 {- $foldl
     Note that you can already mix the @pipes@ and @foldl@ libraries without
