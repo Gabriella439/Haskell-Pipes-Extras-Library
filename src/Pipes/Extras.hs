@@ -31,6 +31,10 @@ module Pipes.Extras (
     , scan1M
     , scan1i
     , scan1iM
+
+    -- * Church encodings
+    , toProxy
+    , fromProxy
     ) where
 
 import Control.Concurrent (threadDelay)
@@ -39,6 +43,7 @@ import Data.Functor.Identity (Identity(Identity, runIdentity))
 import Control.Foldl (purely, impurely, Fold, FoldM)
 import Pipes
 import Pipes.Core (request, respond, (>\\), (//>))
+import Pipes.Internal (Proxy(..))
 import qualified Pipes.Prelude as Pipes
 
 -- | Like 'Control.Arrow.arr' from 'Control.Arrow.Arrow'
@@ -238,3 +243,34 @@ scan1M step begin done = do
   initial <- await
   Pipes.scanM step (begin initial) done
 {-# INLINABLE scan1M #-}
+
+-- | Build a `Proxy` from its church encoding
+toProxy
+    ::  Monad n
+    =>  (   forall m
+        .   Monad m
+        =>  (a' -> (a  -> m r) -> m r)
+        ->  (b  -> (b' -> m r) -> m r)
+        ->  m r
+        )
+    ->  Proxy a' a b' b n r
+toProxy k = k
+    (\a' fa  -> request a' >>= fa )
+    (\b  fb' -> respond b  >>= fb')
+
+-- | Convert a `Proxy` to its church encoding
+fromProxy
+    ::  Monad m
+    =>  Proxy a' a b' b m r
+    ->  (a' -> (a  -> m r) -> m r)
+    ->  (b  -> (b' -> m r) -> m r)
+    ->  m r
+fromProxy p request' respond' = case p of
+    Request a' fa  -> do
+        request' a' (\a  -> fromProxy (fa  a ) request' respond')
+    Respond b  fb' -> do
+        respond' b  (\b' -> fromProxy (fb' b') request' respond')
+    M          m   -> do
+        p' <- m
+        fromProxy p' request' respond'
+    Pure    r      -> return r
