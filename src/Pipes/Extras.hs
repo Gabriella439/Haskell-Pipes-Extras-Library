@@ -44,6 +44,7 @@ import Control.Foldl (purely, impurely, Fold, FoldM)
 import Pipes
 import Pipes.Core (request, respond, (>\\), (//>))
 import Pipes.Internal (Proxy(..))
+import Control.Lens (Prism, withPrism, _Left, _Right)
 import qualified Pipes.Prelude as Pipes
 
 -- | Like 'Control.Arrow.arr' from 'Control.Arrow.Arrow'
@@ -51,33 +52,33 @@ arr :: Monad m => (a -> b) -> Pipe a b m r
 arr = Pipes.map
 {-# INLINABLE arr #-}
 
+select :: Monad m => (b -> t) -> (s -> Either t a) -> Pipe a b m r -> Pipe s t m r
+select inj proj pipe = await' >~ for pipe yield'
+    where
+    yield' b = yield (inj b)
+    await' = do
+        s <- await
+        case proj s of
+            Left t -> do
+                yield t 
+                await'
+            Right a -> return a
+{-# INLINABLE select #-}
+
+select' :: Monad m => Prism s t a b -> Pipe a b m r -> Pipe s t m r
+select' prism = withPrism prism select
+{-# INLINABLE select' #-}
+
 -- | Like 'Control.Arrow.left' from 'Control.Arrow.ArrowChoice'
 left :: Monad m => Pipe a b m r -> Pipe (Either a x) (Either b x) m r
-left p = await' >~ for p yield'
-  where
-    yield' b = yield (Left b)
-    await' = do
-        e <- await
-        case e of
-            Left  a -> return a
-            Right x -> do
-                yield (Right x)
-                await'
+left = select' _Left
 {-# INLINABLE left #-}
 
 -- | Like 'Control.Arrow.right' from 'Control.Arrow.ArrowChoice'
 right :: Monad m => Pipe a b m r -> Pipe (Either x a) (Either x b) m r
-right p = await' >~ for p yield'
-  where
-    yield' b = yield (Right b)
-    await' = do
-        e <- await
-        case e of
-            Left  x -> do
-                yield (Left x)
-                await'
-            Right a -> return a
+right = select' _Right
 {-# INLINABLE right #-}
+
 
 {-| Like ('Control.Arrow.+++') from 'Control.Arrow.ArrowChoice'
 
