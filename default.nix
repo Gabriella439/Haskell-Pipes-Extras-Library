@@ -1,11 +1,11 @@
-{ mkDerivation, base, foldl, HUnit, pipes, stdenv, test-framework
-, test-framework-hunit, transformers
+{ mkDerivation, base, foldl, HUnit, lens, pipes, stdenv
+, test-framework, test-framework-hunit, transformers
 }:
 mkDerivation {
   pname = "pipes-extras";
-  version = "1.0.8";
+  version = "1.0.11";
   src = ./.;
-  libraryHaskellDepends = [ base foldl pipes transformers ];
+  libraryHaskellDepends = [ base foldl lens pipes transformers ];
   testHaskellDepends = [
     base HUnit pipes test-framework test-framework-hunit transformers
   ];
