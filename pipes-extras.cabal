@@ -23,7 +23,7 @@ Library
         pipes        >= 4.0     && < 4.4,
         foldl        >= 1.0.1   && < 1.4,
         transformers >= 0.2.0.0 && < 0.6,
-        lens
+        lens         >= 4.3     && < 4.16
     Exposed-Modules: Pipes.Extras
     GHC-Options: -O2 -Wall
     Default-Language: Haskell2010
