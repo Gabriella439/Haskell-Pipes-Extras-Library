@@ -54,6 +54,7 @@ arr :: Monad m => (a -> b) -> Pipe a b m r
 arr = Pipes.map
 {-# INLINABLE arr #-}
 
+-- | Feed some values into a pipe and let the rest pass by
 select :: Monad m => (b -> t) -> (s -> Either t a) -> Pipe a b m r -> Pipe s t m r
 select inj proj pipe = await' >~ for pipe yield'
     where
@@ -67,6 +68,7 @@ select inj proj pipe = await' >~ for pipe yield'
             Right a -> return a
 {-# INLINABLE select #-}
 
+-- | Like 'select', but use a 'Prism' (like '_Left') to decide what to process
 select' :: Monad m => Prism s t a b -> Pipe a b m r -> Pipe s t m r
 select' prism = withPrism prism select
 {-# INLINABLE select' #-}
