@@ -8,10 +8,12 @@ module Pipes.Extras (
     , left
     , right
     , (+++)
+    , select
 
     -- * Lenses
     , input
     , output
+    , select'
 
     -- * Fun
     , check
