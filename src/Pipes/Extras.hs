@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes, Trustworthy #-}
+{-# LANGUAGE RankNTypes #-}
 
 -- | Unassorted utilities for @pipes@
 
