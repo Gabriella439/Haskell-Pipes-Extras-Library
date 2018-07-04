@@ -1,1 +1,1 @@
-(import ./release.nix).pipes-extras.env
+(import ./default.nix).shell
