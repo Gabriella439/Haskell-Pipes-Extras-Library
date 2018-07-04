@@ -3,7 +3,7 @@
 }:
 mkDerivation {
   pname = "pipes-extras";
-  version = "1.0.14";
+  version = "1.0.15";
   src = ./..;
   libraryHaskellDepends = [ base foldl lens pipes transformers ];
   testHaskellDepends = [
