@@ -1,32 +1,34 @@
 let
-  fetchNixpkgs = import ./nix/fetchNixpkgs.nix;
-
-  nixpkgs = fetchNixpkgs {
-    rev = "804060ff9a79ceb0925fe9ef79ddbf564a225d47";
-
-    sha256 = "01pb6p07xawi60kshsxxq1bzn8a0y4s5jjqvhkwps4f5xjmmwav3";
-
-    outputSha256 = "0ga345hgw6v2kzyhvf5kw96hf60mx5pbd9c4qj5q4nan4lr7nkxn";
+  nixpkgs = builtins.fetchTarball {
+    url    = "https://github.com/NixOS/nixpkgs/archive/ae66c3e40486c0e88a6cefc8d275c248fc6a696c.tar.gz";
+    sha256 = "1gw4kdlkmxyil8capnagv41hqmh31hkibidjgy3bxhlljr8xgfkc";
   };
 
-  readDirectory = import ./nix/readDirectory.nix;
+  config = {};
 
-  config = {
-    packageOverrides = pkgs: {
-      haskellPackages = pkgs.haskellPackages.override {
+  overlay = pkgsNew: pkgsOld: {
+    haskellPackages = pkgsOld.haskellPackages.override (old: {
         overrides =
           let
             manualOverrides = haskellPackagesNew: haskellPackagesOld: {
             };
 
           in
-            pkgs.lib.composeExtensions (readDirectory ./nix) manualOverrides;
-      };
-    };
+            pkgsNew.lib.fold
+              pkgs.lib.composeExtensions
+              (old.overrides or (_: _: {}))
+              [ (pkgsNew.haskell.lib.packagesFromDirectory {
+                    directory = ./nix;
+                  }
+                )
+                manualOverrides
+              ];
+      }
+    );
   };
 
   pkgs =
-    import nixpkgs { inherit config; };
+    import nixpkgs { inherit config; overlays = [ overlay ]; };
 
 in
   { inherit (pkgs.haskellPackages) pipes-extras;
